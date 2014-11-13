@@ -78,6 +78,9 @@ matrixMulKernelShared( float* Md, float* Nd, float* Pd, int width)
         }
         // if (Row + Col == 0)printf("--------------------------\n");
 
+        // ensure data read in before use
+        __syncthreads();
+
         for (c=0; c < COLUMN_SIZE; c += THREAD_BLOCK_1) {
             C = c + Col;
             for (r=0; r < ROW_SIZE; r += THREAD_BLOCK_0) {
@@ -98,5 +101,7 @@ matrixMulKernelShared( float* Md, float* Nd, float* Pd, int width)
                 }
             }
         }
+        // ensure data used before overwritten
+        __syncthreads();
     }
 }
