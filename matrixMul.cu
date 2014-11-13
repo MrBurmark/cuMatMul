@@ -42,15 +42,24 @@ int main(int argc, char** argv)
     // set seed for rand()
     srand(2006);
 
-    if (argc != 2) {
-        printf("usage: ./mMul [size of matrix]\n");
+    if (argc != 3) {
+        printf("usage: ./mMul [size of matrix] ");
+	printf("[1 for global mem or 2 for shared mem]\n");
         exit(1);
+    }
+
+    int whichFunc = atoi(argv[2]);
+
+    if (whichFunc != 1 && whichFunc != 2){
+	printf("usage: ./mMul [size of matrix] ");
+	printf("[1 for global mem or 2 for shared mem]\n");
+	exit(1);
     }
 
     int width = atoi(argv[1]); 
 
-    printf("width %i, ROW_SIZE %i, COLUMN_SIZE %i, K_SIZE %i, THREAD_BLOCK_0 %i, THREAD_BLOCK_1 %i\n", width, ROW_SIZE, COLUMN_SIZE, K_SIZE, THREAD_BLOCK_0, THREAD_BLOCK_1);
-
+    printf("width %i, ROW_SIZE %i, COLUMN_SIZE %i, K_SIZE %i, THREAD_BLOCK_0 %i, THREAD_BLOCK_1 %i", width, ROW_SIZE, COLUMN_SIZE, K_SIZE, THREAD_BLOCK_0, THREAD_BLOCK_1);
+    printf("which func: %i\n", whichFunc);
     // allocate host memory for matrices M and N
     unsigned int size_M = width * width;
     unsigned int mem_size_M = sizeof(float) * size_M;
@@ -103,7 +112,12 @@ int main(int argc, char** argv)
     dim3 threads(THREAD_BLOCK_1, THREAD_BLOCK_0, 1);
 
     // kernel warmup
-    matrixMulKernelShared<<< blocks, threads >>>(d_M, d_N, d_P, width);
+    if(whichFunc == 1)
+    	matrixMulKernelGlobal<<< blocks, threads >>>(d_M, d_N, d_P, width);
+
+    if(whichFunc == 2) 
+    	matrixMulKernelShared<<< blocks, threads >>>(d_M, d_N, d_P, width);
+
     cudaThreadSynchronize();
     
     // copy result from device to host

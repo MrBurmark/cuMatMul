@@ -17,6 +17,7 @@ matrixMulKernelGlobal( float* Md, float* Nd, float* Pd, int width)
 
     if (Row < width && Col < width) {
     	for (k = 0; k < width; ++k) {
+			
 	        Psub += Md[Row * width + k] * Nd[k * width + Col];
 	    }
 
