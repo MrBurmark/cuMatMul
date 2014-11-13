@@ -2,6 +2,8 @@
 #define _MATRIXMUL_H_
 
 //#define WIDTH 32 // Matrix width
+
+#define GLOBAL 0
 #define ROW_SIZE 64 // divides matrix width
 #define COLUMN_SIZE 64 // divides matrix width
 #define K_SIZE 32 // divides matrix width

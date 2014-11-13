@@ -1,5 +1,5 @@
 //
-// Compile: nvcc matrixMul.cu matrixMul_gold.cpp -o mMul
+// Compile: nvcc matrixMul.cu matrixMul_gold.cpp -o mMul -O3 -arch=compute_20 -code=sm_20,sm_30,sm_35
 // Use: mMul
 //
 #include <stdio.h>
@@ -49,7 +49,10 @@ int main(int argc, char** argv)
 
     int width = atoi(argv[1]); 
 
-    printf("width %i, ROW_SIZE %i, COLUMN_SIZE %i, K_SIZE %i, THREAD_BLOCK_0 %i, THREAD_BLOCK_1 %i\n", width, ROW_SIZE, COLUMN_SIZE, K_SIZE, THREAD_BLOCK_0, THREAD_BLOCK_1);
+    if (GLOBAL)
+        printf("Not using shared memory\n");
+    else
+        printf("width %i, ROW_SIZE %i, COLUMN_SIZE %i, K_SIZE %i, THREAD_BLOCK_0 %i, THREAD_BLOCK_1 %i\n", width, ROW_SIZE, COLUMN_SIZE, K_SIZE, THREAD_BLOCK_0, THREAD_BLOCK_1);
 
     // allocate host memory for matrices M and N
     unsigned int size_M = width * width;
@@ -89,21 +92,22 @@ int main(int argc, char** argv)
     // printMatrix(h_N,width);
     // printMatrix(h_M,width);
     
-
+#if GLOBAL
     // setup execution parameters
-    // dim3 blocks(ceil(width/(double)16), ceil(width/(double)16), 1);
-    // dim3 threads(16, 16, 1);
+    dim3 blocks(ceil(width/(double)16), ceil(width/(double)16), 1);
+    dim3 threads(16, 16, 1);
 
     // kernel warmup
-    // matrixMulKernelGlobal<<< blocks, threads >>>(d_M, d_N, d_P, width);
+    matrixMulKernelGlobal<<< blocks, threads >>>(d_M, d_N, d_P, width);
 
-
+#else
     // setup execution parameters
     dim3 blocks(ceil(width/(double)COLUMN_SIZE), ceil(width/(double)ROW_SIZE), 1);
     dim3 threads(THREAD_BLOCK_1, THREAD_BLOCK_0, 1);
 
     // kernel warmup
     matrixMulKernelShared<<< blocks, threads >>>(d_M, d_N, d_P, width);
+#endif
     cudaThreadSynchronize();
     
     // copy result from device to host
