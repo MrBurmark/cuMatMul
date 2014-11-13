@@ -2,6 +2,8 @@
 // Compile: nvcc matrixMul.cu matrixMul_gold.cpp -o mMul
 // Use: mMul
 //
+#include <stdio.h>
+#include "matrixMul.h"
 
 // includes, kernels
 #include "mMul.cu"
@@ -14,6 +16,17 @@ void printDiff(float*, float*, int, int, int, float);
 
 extern "C"
 void computeGold( float*, const float*, const float*, unsigned int w);
+
+void printMatrix(float *M, int width) {
+    int i, j;
+    for (i=0;i<width;i++){
+        for (j=0;j<width;j++){
+            printf("%.3f ",M[i*width+j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Program main
@@ -29,11 +42,18 @@ int main(int argc, char** argv)
     // set seed for rand()
     srand(2006);
 
+    if (argc != 2) {
+        printf("usage: ./mMul [size of matrix]\n");
+        exit(1);
+    }
+
+    int width = atoi(argv[1]); 
+
     // allocate host memory for matrices M and N
-    unsigned int size_M = WIDTH * WIDTH;
+    unsigned int size_M = width * width;
     unsigned int mem_size_M = sizeof(float) * size_M;
     float* h_M = (float*)malloc(mem_size_M);
-    unsigned int size_N = WIDTH * WIDTH;
+    unsigned int size_N = width * width;
     unsigned int mem_size_N = sizeof(float) * size_N;
     float* h_N = (float*)malloc(mem_size_N);
 
@@ -56,20 +76,25 @@ int main(int argc, char** argv)
                               cudaMemcpyHostToDevice);
 
     // allocate device memory for result
-    unsigned int size_P = WIDTH * WIDTH;
+    unsigned int size_P = width * width;
     unsigned int mem_size_P = sizeof(float) * size_P;
     float* d_P;
     cudaMalloc((void**) &d_P, mem_size_P);
 
     // allocate host memory for the result
     float* h_P = (float*) malloc(mem_size_P);
+
+    // printMatrix(h_N,width);
+    // printMatrix(h_M,width);
     
 
     // setup execution parameters
-    dim3 threads(WIDTH, WIDTH);
+    dim3 blocks(ceil(width/(double)ROW_SIZE), ceil(width/(double)COLUMN_SIZE), 1);
+    dim3 threads(THREAD_BLOCK_0, THREAD_BLOCK_1, 1);
 
     // kernel warmup
-    matrixMulKernel<<< 1, threads >>>(d_M, d_N, d_P, WIDTH);
+    // matrixMulKernelGlobal<<< blocks, threads >>>(d_M, d_N, d_P, width);
+    matrixMulKernelShared<<< blocks, threads >>>(d_M, d_N, d_P, width);
     cudaThreadSynchronize();
     
     // copy result from device to host
@@ -84,10 +109,10 @@ int main(int argc, char** argv)
 
     // compute reference solution
     float* reference = (float*)malloc(mem_size_P);
-    computeGold(reference, h_M, h_N, WIDTH);
+    computeGold(reference, h_M, h_N, width);
 
     // check result
-    printDiff(reference, h_P, WIDTH, WIDTH, 100, 1.0e-5f);
+    printDiff(reference, h_P, width, width, 100, 1.0e-5f);
 
     // clean up memory
     free(h_M);
