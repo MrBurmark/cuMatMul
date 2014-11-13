@@ -49,6 +49,8 @@ int main(int argc, char** argv)
 
     int width = atoi(argv[1]); 
 
+    printf("width %i, ROW_SIZE %i, COLUMN_SIZE %i, K_SIZE %i, THREAD_BLOCK_0 %i, THREAD_BLOCK_1 %i\n", width, ROW_SIZE, COLUMN_SIZE, K_SIZE, THREAD_BLOCK_0, THREAD_BLOCK_1);
+
     // allocate host memory for matrices M and N
     unsigned int size_M = width * width;
     unsigned int mem_size_M = sizeof(float) * size_M;
@@ -89,11 +91,18 @@ int main(int argc, char** argv)
     
 
     // setup execution parameters
-    dim3 blocks(ceil(width/(double)ROW_SIZE), ceil(width/(double)COLUMN_SIZE), 1);
-    dim3 threads(THREAD_BLOCK_0, THREAD_BLOCK_1, 1);
+    // dim3 blocks(ceil(width/(double)THREAD_BLOCK_1), ceil(width/(double)THREAD_BLOCK_0), 1);
+    // dim3 threads(THREAD_BLOCK_1, THREAD_BLOCK_0, 1);
 
     // kernel warmup
     // matrixMulKernelGlobal<<< blocks, threads >>>(d_M, d_N, d_P, width);
+
+
+    // setup execution parameters
+    dim3 blocks(ceil(width/(double)COLUMN_SIZE), ceil(width/(double)ROW_SIZE), 1);
+    dim3 threads(THREAD_BLOCK_1, THREAD_BLOCK_0, 1);
+
+    // kernel warmup
     matrixMulKernelShared<<< blocks, threads >>>(d_M, d_N, d_P, width);
     cudaThreadSynchronize();
     
@@ -135,23 +144,29 @@ void randomInit(float* data, int size)
 void printDiff(float *data1, float *data2, int width, int height, int iListLength, float fListTol)
 {
     printf("Listing first %d Differences > %.6f...\n", iListLength, fListTol);
-    int i,j,k;
+    int i,j,k,u;
     int error_count=0;
     for (j = 0; j < height; j++) 
     {
-        if (error_count < iListLength)
-        {
-            printf("\n  Row %d:\n", j);
-        }
+        // if (error_count < iListLength)
+        // {
+        //     printf("\n  Row %d:\n", j);
+        // }
+        u = 1;
         for (i = 0; i < width; i++) 
         {
             k = j * width + i;
             float fDiff = fabs(data1[k] - data2[k]) / data1[k];
-            if (fDiff > fListTol) 
+            if (fDiff > fListTol || isnan(fDiff)) 
             {                
                 if (error_count < iListLength)
                 {
+                    if (u)
+                    {
+                        printf("\n  Row %d:\n", j);
+                    }
                     printf("    Loc(%d,%d)\tCPU=%.5f\tGPU=%.5f\tDiff=%.6f\n", i, j, data1[k], data2[k], fDiff);
+                    u = 0;
                 }
                 error_count++;
             }
