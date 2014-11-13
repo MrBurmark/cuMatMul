@@ -44,10 +44,11 @@ matrixMulKernelShared( float* Md, float* Nd, float* Pd, int width)
         R = r + Row;
         for (c=0; c < COLUMN_SIZE; c += THREAD_BLOCK_1) {
             C = c + Col;
-            // if (R < width && C < width) {
+            if (R < width && C < width) 
+            {
 
                 Pd[R * width + C] = 0.0f;
-            // }
+            }
         }
     }
 
@@ -59,7 +60,7 @@ matrixMulKernelShared( float* Md, float* Nd, float* Pd, int width)
             K = k + K_Block + threadIdx.y;
             for (c=0; c < COLUMN_SIZE; c += THREAD_BLOCK_1) {
                 C = c + Col;
-                // if (K < width && C < width)
+                if (K < width && C < width)
                 {
                     Cmem[k + threadIdx.y][c + threadIdx.x] = Nd[K * width + C];
                     // printf("C[%i,%i]=%.3f\n", c+threadIdx.x, k + threadIdx.y, Cmem[c+threadIdx.x][k + threadIdx.y]);
@@ -73,7 +74,7 @@ matrixMulKernelShared( float* Md, float* Nd, float* Pd, int width)
             R = r + Row;
             for (k=0; k < K_SIZE; k += THREAD_BLOCK_1) {
                 K = k + K_Block + threadIdx.x;
-                // if (K < width && R < width) 
+                if (K < width && R < width) 
                 {
                     Rmem[r + threadIdx.y][k + threadIdx.x] = Md[R * width + K];
                     // printf("R[%i,%i]=%.3f\n", r+threadIdx.y, k + threadIdx.x, Rmem[r+threadIdx.y][k + threadIdx.x]);
@@ -89,11 +90,11 @@ matrixMulKernelShared( float* Md, float* Nd, float* Pd, int width)
             C = c + Col;
             for (r=0; r < ROW_SIZE; r += THREAD_BLOCK_0) {
                 R = r + Row;
-                // if (R < width && C < width) 
+                if (R < width && C < width) 
                 {
 
                     Psub = 0.0f;
-                    for (k=0; k < K_SIZE /*&& k < width - K_Block*/; k++) {
+                    for (k=0; k < K_SIZE && k < width - K_Block; k++) {
                         
                         Psub += Rmem[r + threadIdx.y][k] * Cmem[k][c + threadIdx.x];
                         // printf("C[%i,%i]=%.3f\n", c + threadIdx.x, k, Cmem[c + threadIdx.x][k]);
