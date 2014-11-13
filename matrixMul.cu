@@ -91,8 +91,8 @@ int main(int argc, char** argv)
     
 
     // setup execution parameters
-    // dim3 blocks(ceil(width/(double)THREAD_BLOCK_1), ceil(width/(double)THREAD_BLOCK_0), 1);
-    // dim3 threads(THREAD_BLOCK_1, THREAD_BLOCK_0, 1);
+    // dim3 blocks(ceil(width/(double)16), ceil(width/(double)16), 1);
+    // dim3 threads(16, 16, 1);
 
     // kernel warmup
     // matrixMulKernelGlobal<<< blocks, threads >>>(d_M, d_N, d_P, width);
