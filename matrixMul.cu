@@ -42,18 +42,9 @@ int main(int argc, char** argv)
     // set seed for rand()
     srand(2006);
 
-    if (argc != 3) {
+    if (argc != 2) {
         printf("usage: ./mMul [size of matrix] ");
-	printf("[1 for global mem or 2 for shared mem]\n");
         exit(1);
-    }
-
-    int whichFunc = atoi(argv[2]);
-
-    if (whichFunc != 1 && whichFunc != 2){
-	printf("usage: ./mMul [size of matrix] ");
-	printf("[1 for global mem or 2 for shared mem]\n");
-	exit(1);
     }
 
     int width = atoi(argv[1]); 
