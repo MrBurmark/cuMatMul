@@ -119,6 +119,7 @@ int main(int argc, char** argv)
     cudaEventElapsedTime(&time, start, stop);
 
     printf("Elapsed time = %f ms\n", time);
+    fflush(stdout);
 
     // compute reference solution
     float* reference = (float*)malloc(mem_size_P);
