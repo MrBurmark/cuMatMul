@@ -52,6 +52,7 @@ int main(int argc, char** argv)
         printf("Not using shared memory\n");
     else
         printf("width %i, ROW_SIZE %i, COLUMN_SIZE %i, K_SIZE %i, THREAD_BLOCK_0 %i, THREAD_BLOCK_1 %i\n", width, ROW_SIZE, COLUMN_SIZE, K_SIZE, THREAD_BLOCK_0, THREAD_BLOCK_1);
+    
     // allocate host memory for matrices M and N
     unsigned int size_M = width * width;
     unsigned int mem_size_M = sizeof(float) * size_M;
