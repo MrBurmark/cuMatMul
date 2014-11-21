@@ -1,5 +1,5 @@
 #!/bin/bash
-
+rm test.log
 for rs in 32 64; do
 	for cs in 32 64 128; do
 		for ks in 16 32 64; do
@@ -12,3 +12,4 @@ for rs in 32 64; do
 		done
 	done
 done
+./testParse

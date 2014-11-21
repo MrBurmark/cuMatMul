@@ -136,6 +136,8 @@ int main(int argc, char** argv)
 #endif
     // check result
     printDiff(reference, h_P, width, width, 100, 1.0e-5f);
+
+    free(reference);
 #endif
     // clean up memory
     free(h_M);

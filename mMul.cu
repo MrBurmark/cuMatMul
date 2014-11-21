@@ -46,10 +46,8 @@ matrixMulKernelShared( float* Md, float* Nd, float* Pd, int width)
     // initialize submatrix to 0
     for (R = Row; R < Row_Bound; R += THREAD_BLOCK_0)
     {
-        r = R - Block_Row;
         for (C = Col; C < Col_Bound; C += THREAD_BLOCK_1) 
         {
-            c = C - Block_Col;
             Pd[R * width + C] = 0.0f;
         }
     }
@@ -60,12 +58,10 @@ matrixMulKernelShared( float* Md, float* Nd, float* Pd, int width)
         K_Bound = min(Block_K + K_SIZE, width);
 
         // copy in C submatrix
-        for (K = Block_K + threadIdx.y; K < K_Bound; K += THREAD_BLOCK_0) 
+        for (k = threadIdx.y, K = Block_K + threadIdx.y; K < K_Bound; k += THREAD_BLOCK_0, K += THREAD_BLOCK_0) 
         {
-            k = K - Block_K;
-            for (C = Col; C < Col_Bound; C += THREAD_BLOCK_1) 
+            for (c = threadIdx.x, C = Col; C < Col_Bound; c += THREAD_BLOCK_1, C += THREAD_BLOCK_1) 
             {
-                c = C - Block_Col;
                 Cmem[k][c] = Nd[K * width + C];
                 // printf("C[%i,%i]=%.3f\n", c+threadIdx.x, k + threadIdx.y, Cmem[c+threadIdx.x][k + threadIdx.y]);
             }
@@ -73,12 +69,10 @@ matrixMulKernelShared( float* Md, float* Nd, float* Pd, int width)
         // if (Row + Col == 0)printf("++++++++++++++++++++++++++\n");
 
         // copy in R submatrix
-        for (R = Row; R < Row_Bound; R += THREAD_BLOCK_0)
+        for (r = threadIdx.y, R = Row; R < Row_Bound; r += THREAD_BLOCK_0, R += THREAD_BLOCK_0)
         {
-            r = R - Block_Row;
-            for (K = Block_K + threadIdx.x; K < K_Bound; K += THREAD_BLOCK_1) 
+            for (k = threadIdx.x, K = Block_K + threadIdx.x; K < K_Bound; k += THREAD_BLOCK_1, K += THREAD_BLOCK_1) 
             {
-                k = K - Block_K;
                 Rmem[r][k] = Md[R * width + K];
                 // printf("R[%i,%i]=%.3f\n", r+threadIdx.y, k + threadIdx.x, Rmem[r+threadIdx.y][k + threadIdx.x]);
             }
@@ -88,13 +82,10 @@ matrixMulKernelShared( float* Md, float* Nd, float* Pd, int width)
         // ensure data read in before use
         __syncthreads();
 
-        for (C = Col; C < Col_Bound; C += THREAD_BLOCK_1) 
+        for (c = threadIdx.x, C = Col; C < Col_Bound; c += THREAD_BLOCK_1, C += THREAD_BLOCK_1) 
         {
-            c = C - Block_Col;
-            for (R = Row; R < Row_Bound; R += THREAD_BLOCK_0)
+            for (r = threadIdx.y, R = Row; R < Row_Bound; r += THREAD_BLOCK_0, R += THREAD_BLOCK_0)
             {
-                r = R - Block_Row;
-
                 Psub = 0.0f;
                 for (k=0; k < K_Bound - Block_K; k++) 
                 {

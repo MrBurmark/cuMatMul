@@ -13,7 +13,7 @@
 #define ROW_SIZE 64 // divides matrix width
 #endif
 #ifndef COLUMN_SIZE
-#define COLUMN_SIZE 64 // divides matrix width
+#define COLUMN_SIZE 32 // divides matrix width
 #endif
 #ifndef K_SIZE
 #define K_SIZE 32 // divides matrix width
