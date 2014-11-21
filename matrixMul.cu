@@ -110,8 +110,7 @@ int main(int argc, char** argv)
     cudaThreadSynchronize();
     
     // copy result from device to host
-    cudaMemcpy(h_P, d_P, mem_size_P,
-                              cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_P, d_P, mem_size_P, cudaMemcpyDeviceToHost);
 
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
@@ -119,14 +118,25 @@ int main(int argc, char** argv)
 
     printf("Elapsed time = %f ms\n", time);
     fflush(stdout);
-
+#if CHECK
     // compute reference solution
     float* reference = (float*)malloc(mem_size_P);
+#if GLOBAL
     computeGold(reference, h_M, h_N, width);
+#else
+    // setup execution parameters
+    dim3 c_blocks(ceil(width/(double)16), ceil(width/(double)16), 1);
+    dim3 c_threads(16, 16, 1);
 
+    // kernel warmup
+    matrixMulKernelGlobal<<< c_blocks, c_threads >>>(d_M, d_N, d_P, width);
+    cudaThreadSynchronize();
+
+    cudaMemcpy(reference, d_P, mem_size_P, cudaMemcpyDeviceToHost);
+#endif
     // check result
     printDiff(reference, h_P, width, width, 100, 1.0e-5f);
-
+#endif
     // clean up memory
     free(h_M);
     free(h_N);

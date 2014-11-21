@@ -4,4 +4,6 @@
 *.qsub
 *.o[0-9][0-9][0-9]
 mMul
+*.sublime*
+testParse
 
